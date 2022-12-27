@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:algo_test/pages/homepages.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-
+import 'package:document_file_save_plus/document_file_save_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_files_and_screenshot_widgets/share_files_and_screenshot_widgets.dart';
 
@@ -22,7 +22,6 @@ class PreviewPage extends StatefulWidget {
 class _PreviewPageState extends State<PreviewPage> {
   @override
   Widget build(BuildContext context) {
-    print(widget.image.toString());
     GlobalKey previewContainer = GlobalKey();
 
     int originalSize = 800;
@@ -47,7 +46,7 @@ class _PreviewPageState extends State<PreviewPage> {
       }
     }
 
-    Future<void> _savepng() async {
+    Future<void> savepng() async {
       try {
         RenderRepaintBoundary boundary = previewContainer.currentContext!
             .findRenderObject() as RenderRepaintBoundary;
@@ -55,26 +54,18 @@ class _PreviewPageState extends State<PreviewPage> {
         ByteData? byteData =
             await image.toByteData(format: ImageByteFormat.png);
         final pngBytes = byteData!.buffer.asUint8List();
-        if (pngBytes != null) {
-          final directory = await getApplicationDocumentsDirectory();
-          File imagePath = await File('${directory.path}/image.png').create();
 
-          String img64 = base64Encode(pngBytes);
-          final decodedBytes = base64Decode(img64);
-          var file = File('${directory.path}/image.png');
-          file.writeAsBytesSync(decodedBytes);
-          // print(img64.substring(0, 100));
-          // final imageEncode = base64Encode(pngBytes);
-          // String base64String = base64Encode(pngBytes);
-          // String header = "data:image/png;base64,";
-          // String image64 = header + base64String;
+        await DocumentFileSavePlus.saveFile(
+            pngBytes, "images.png", "image/png");
 
-          // print(image64);
-          // final File newImage = await imagePath.writeAsBytes(pngBytes);
-          // final data = await File(imagePath.toString()).open();
-
-          // await imagePath.writeAsBytes(pngBytes);
-        }
+        var snackBar = const SnackBar(
+          content: Text(
+            'Berhasil disimpan',
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       } catch (e) {
         print(e);
       }
@@ -83,6 +74,14 @@ class _PreviewPageState extends State<PreviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Preview Mim Generator'),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePages()),
+                  (route) => false);
+            },
+            icon: Icon(Icons.arrow_back_ios)),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -98,7 +97,7 @@ class _PreviewPageState extends State<PreviewPage> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    _savepng();
+                    savepng();
                   },
                   child: const Text('Simpan'),
                 ),
